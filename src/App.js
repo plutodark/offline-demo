@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
 import { openDB } from 'idb';
 
 function App() {
   const [data, setData] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     async function fetchData() {
@@ -33,13 +34,27 @@ function App() {
     setData([...data, newData]);
   };
 
+  const handleSearchChange = (event) => {
+    setSearchQuery(event.target.value);
+  };
+
+  const filteredData = data.filter((item) =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="App">
       <header className="App-header">
         <h1>Offline Demo with IndexedDB</h1>
         <button onClick={handleAddData}>Add Data</button>
+        <input
+          type="text"
+          placeholder="Search..."
+          value={searchQuery}
+          onChange={handleSearchChange}
+        />
         <ul>
-          {data.map((item, index) => (
+          {filteredData.map((item, index) => (
             <li key={index}>{item.name}</li>
           ))}
         </ul>
