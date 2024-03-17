@@ -1,44 +1,56 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   // getItems,
   addItem,
   updateItem,
   deleteItem,
   bulkAddItems,
-  db
+  multiBulkAdd,
+  searchItems,
+  //getLastItem,
+  // db
 } from './db';
-import { useLiveQuery } from "dexie-react-hooks";
+// import { useLiveQuery } from "dexie-react-hooks";
 
 const ItemList = () => {
- // const [items, setItems] = useState([]);
   const [query, setQuery] = useState('');
+  const [seconds, setSeconds] = useState(0);
+  const [items, setItems] = useState([]);
   const offset = 0;
   const limit = 10;
-  const handleSearchQuery = () => {
-    console.log('query', query)
-    return db.items
-    .where('name')
-    .startsWith(query)
-    //.anyOf(query)
-    .offset(offset)
-    .limit(limit)
-    .sortBy('id')
-  }
-  const items = useLiveQuery(
-    handleSearchQuery,
-      [query],
-      []
-  );
-  console.log('items', items);
+  // const handleSearchQuery = () => {
+  //   const regex = new RegExp(query, 'i');
+  //   const collection = query ? db.items.filter(item => regex.test(item.name)) : db.items;
+    
+  //   return collection
+  //   .offset(offset)
+  //   .limit(limit)
+  //   .sortBy('id')
+  // }
+  // const items = useLiveQuery(
+  //   handleSearchQuery,
+  //     [query],
+  //     []
+  // );
+  useEffect(() => {
+    const fetchData = async () => {
+      const { result, consumedSeconds } = await searchItems({ offset, limit, query });
+      setItems(result);
+      setSeconds(consumedSeconds);
+    }
+    fetchData();
+  }, [query]);
 
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     const allItems = await getItems({ offset: 0, limit: 10 });
-  //     setItems(allItems);
-  //   };
+  useEffect(() => {
+    const fetchData = async () => {
+      // const item = await getLastItem();
+      // console.log(item);
+      // const count = item ? item.id : 1;
+      // console.log('count', count);
+    };
 
-  //   fetchData();
-  // }, []);
+    fetchData();
+  }, [items]);
 
   const handleAdd = (newItem) => {
     addItem(newItem);
@@ -59,6 +71,7 @@ const ItemList = () => {
     <div>
       <div>search</div>
       <input type="text" name="name" onChange={e => setQuery(e.target.value)} value={query} />
+      <div>It takes {seconds} seconds to finished the search!</div>
       <h2>My Items</h2>
       
       <ul>
@@ -82,6 +95,7 @@ const ItemList = () => {
         <button type="submit">Add Item</button>
       </form>
       <button onClick={bulkAddItems}>Bulk add</button>
+      <button onClick={multiBulkAdd}>Mulit bulk add</button>
     </div>
   );
 };
