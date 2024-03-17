@@ -2,8 +2,8 @@ var CACHE_NAME = 'offline-demo-cache';
 var urlsToCache = [
   '/',
   '/index.html',
-  '/static/js/main.ab61f6ac.js',
-  '/static/css/main.f855e6bc.css',
+  '/static/js/main.js',
+  '/static/css/main.css',
   '/favicon.ico',
 ];
 

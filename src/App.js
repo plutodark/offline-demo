@@ -1,66 +1,103 @@
 import { useState, useEffect } from 'react';
-import './App.css';
-import { openDB } from 'idb';
+import {
+  // getItems,
+  addItem,
+  updateItem,
+  deleteItem,
+  bulkAddItems,
+  multiBulkAdd,
+  searchItems,
+  //getLastItem,
+  // db
+} from './db';
+// import { useLiveQuery } from "dexie-react-hooks";
 
-function App() {
-  const [data, setData] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
+const ItemList = () => {
+  const [query, setQuery] = useState('');
+  const [seconds, setSeconds] = useState(0);
+  const [items, setItems] = useState([]);
+  const offset = 0;
+  const limit = 10;
+  // const handleSearchQuery = () => {
+  //   const regex = new RegExp(query, 'i');
+  //   const collection = query ? db.items.filter(item => regex.test(item.name)) : db.items;
+    
+  //   return collection
+  //   .offset(offset)
+  //   .limit(limit)
+  //   .sortBy('id')
+  // }
+  // const items = useLiveQuery(
+  //   handleSearchQuery,
+  //     [query],
+  //     []
+  // );
+  useEffect(() => {
+    const fetchData = async () => {
+      const { result, consumedSeconds } = await searchItems({ offset, limit, query });
+      setItems(result);
+      setSeconds(consumedSeconds);
+    }
+    fetchData();
+  }, [query]);
 
   useEffect(() => {
-    async function fetchData() {
-      const db = await openDB('offline-demo-db', 1, {
-        upgrade(db) {
-          db.createObjectStore('data-store', { autoIncrement: true, keyPath: 'id' });
-        },
-      });
-
-      const tx = db.transaction('data-store', 'readonly');
-      const store = tx.objectStore('data-store');
-      const items = await store.getAll();
-      setData(items);
-    }
+    const fetchData = async () => {
+      // const item = await getLastItem();
+      // console.log(item);
+      // const count = item ? item.id : 1;
+      // console.log('count', count);
+    };
 
     fetchData();
-  }, []);
+  }, [items]);
 
-  const handleAddData = async () => {
-    const newData = { name: `Item ${data.length + 1}` };
-
-    const db = await openDB('offline-demo-db', 1);
-    const tx = db.transaction('data-store', 'readwrite');
-    const store = tx.objectStore('data-store');
-    await store.add(newData);
-
-    setData([...data, newData]);
+  const handleAdd = (newItem) => {
+    addItem(newItem);
+    //setItems([...items, newItem]);
   };
 
-  const handleSearchChange = (event) => {
-    setSearchQuery(event.target.value);
+  const handleUpdate = (id, updatedItem) => {
+    updateItem(id, updatedItem);
+    //setItems(items.map((item) => (item.id === id ? updatedItem : item)));
   };
 
-  const filteredData = data.filter((item) =>
-    item.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleDelete = (id) => {
+    deleteItem(id);
+    //setItems(items.filter((item) => item.id !== id));
+  };
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>Offline Demo with IndexedDB</h1>
-        <button onClick={handleAddData}>Add Data</button>
-        <input
-          type="text"
-          placeholder="Search..."
-          value={searchQuery}
-          onChange={handleSearchChange}
-        />
-        <ul>
-          {filteredData.map((item, index) => (
-            <li key={index}>{item.name}</li>
-          ))}
-        </ul>
-      </header>
+    <div>
+      <div>search</div>
+      <input type="text" name="name" onChange={e => setQuery(e.target.value)} value={query} />
+      <div>It takes {seconds} seconds to finished the search!</div>
+      <h2>My Items</h2>
+      
+      <ul>
+        {items.map((item) => (
+          <li key={item.id}>
+            {item.name} - {item.purchased ? 'Purchased' : 'Not Purchased'}
+            <button onClick={() => handleUpdate(item.id, { ...item, purchased: !item.purchased })}>
+              Toggle Purchased
+            </button>
+            <button onClick={() => handleDelete(item.id)}>Delete</button>
+          </li>
+        ))}
+      </ul>
+      <form onSubmit={(e) => {
+        e.preventDefault();
+        const newItem = { name: e.target.name.value, purchased: false };
+        handleAdd(newItem);
+        e.target.reset();
+      }}>
+        <input type="text" name="name" placeholder="Enter item name" />
+        <button type="submit">Add Item</button>
+      </form>
+      <button onClick={bulkAddItems}>Bulk add</button>
+      <button onClick={multiBulkAdd}>Mulit bulk add</button>
     </div>
   );
-}
+};
 
-export default App;
+export default ItemList;
